@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="center">
+      <h1>Amazing Chat Application</h1>
+      <h3 id="chat-header">Currently in chat: general</h3>
+      <form id="chatroom-selection">
+        <label for="chatroom"> Chatroom: </label>
+        <input type="text" id="chatroom" name="chatroom" /><br /><br />
+        <input type="submit" value="Change chatroom" />
+      </form>
+      <br />
+      <textarea
+        class="messagearea"
+        id="chatmessages"
+        readonly
+        name="chatmessages"
+        rows="4"
+        cols="50"
+        placeholder="Welcome to chatroom"
+      ></textarea>
+      <br />
+
+      <form id="chatroom-message">
+        <label for="message">Message:</label>
+        <input type="text" id="message" name="message" /><br /><br />
+        <input type="submit" value="Send message" />
+      </form>
+
+      <script>
+        var selectedChat = "general";
+        function changeChatRoom() {
+          var newchat = document.getElementById("chatroom");
+          if (newchat != null && newchat.value != selectedChat) {
+            console.log(newchat);
+          }
+          return false;
+        }
+
+        class Event {
+          constructor(type, payload) {
+            this.type = type;
+            this.payload = payload;
+          }
+        }
+
+        function routeEvent(event) {
+          if (event.type === undefined) {
+            alert("no type field in the event");
+          }
+
+          switch (event.type) {
+            case "new_message":
+              console.log("new message");
+              break;
+            default:
+              alert("unsupported message type");
+              break;
+          }
+        }
+
+        function sendEvent(eventName, payload) {
+          const event = new Event(eventName, payload);
+
+          conn.send(JSON.stringify(event));
+        }
+
+        function sendMessage() {
+          var newmessage = document.getElementById("message");
+          if (newmessage != null) {
+            sendEvent("send_message", newmessage.value);
+          }
+          return false;
+        }
+
+        window.onload = function () {
+          document.getElementById("chatroom-selection").onsubmit =
+            changeChatRoom;
+          document.getElementById("chatroom-message").onsubmit = sendMessage;
+
+          if (window["WebSocket"]) {
+            console.log("supports websockets");
+            // connect to ws
+            conn = new WebSocket("ws://" + document.location.host + "/ws");
+
+            conn.onmessage = function (evt) {
+              const eventData = JSON.parse(evt.data);
+              const event = Object.assign(new Event(), eventData);
+              routeEvent(event);
+            };
+          } else {
+            console.log("Browser doesnt support ws");
+          }
+        };
+      </script>
+    </div>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .center {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+        width: 400px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+
+      h3 {
+        color: #555;
+        text-align: center;
+      }
+
+      form {
+        margin-top: 20px;
+      }
+
+      label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      input[type="submit"] {
+        width: 100%;
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        resize: none;
+        margin-bottom: 15px;
+      }
+    </style>
+  </body>
+</html>
